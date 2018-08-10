@@ -1,0 +1,53 @@
+#
+
+/root/.ssh/authorized_keys # <- id_rsa.pub
+apt-get update
+apt-get install htop
+wget https://repo.percona.com/apt/percona-release_0.1-6.$(lsb_release -sc)_all.deb
+dpkg -i percona-release_0.1-6.$(lsb_release -sc)_all.deb
+apt-get update
+apt-get install percona-server-server-5.7
+
+mysql -p "mysql"
+mysql> CREATE FUNCTION fnv1a_64 RETURNS INTEGER SONAME 'libfnv1a_udf.so';
+mysql> CREATE FUNCTION fnv_64 RETURNS INTEGER SONAME 'libfnv_udf.so';
+mysql> CREATE FUNCTION murmur_hash RETURNS INTEGER SONAME 'libmurmur_udf.so';
+
+#apt-get install percona-server-rocksdb-5.7
+#ps-admin --enable-rocksdb -u root -p
+
+# /etc/sysctl.conf
+vm.swappiness=0
+
+# /etc/fstab
+UUID=...  /  ext4  noatime,nodiratime,errors=remount-ro  0  1
+
+# /etc/mysql/percona-server.conf.d/mysqld.cnf
+# Added by quicklog.io
+gtid-mode = ON
+enforce-gtid-consistency = ON
+#rocksdb
+#default-storage-engine = RocksDB
+#skip-innodb
+#default-tmp-storage-engine = MyISAM
+#collation-server = utf8_bin
+#collation-server = latin1_bin
+log-bin = bin.log
+binlog-format = ROW
+#rocksdb_block_cache_size = 256m
+#rocksdb_use_direct_reads = ON
+#rocksdb_use_direct_io_for_flush_and_compaction = ON
+
+apt-get upgrade
+apt-get dist-upgrade
+apt-get autoremove
+
+adduser keith
+usermod -aG sudo keith
+
+#ps-admin --disable-rocksdb -p
+#apt-get remove percona-server-rocksdb-5.7
+
+apt install libjemalloc1
+apt-get install percona-server-tokudb-5.7
+ps_tokudb_admin --enable -p
