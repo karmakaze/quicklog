@@ -1,0 +1,12 @@
+{
+  "name": "quicklog",
+  "version": "0.1.0",
+  "description": "Structured (short-term) application logging",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "nodemon": "^1.18.3"
+  }
+}

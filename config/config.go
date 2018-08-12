@@ -1,5 +1,5 @@
 package config
 
 type Config struct {
-	DBUrl string
+	DbUrl string
 }

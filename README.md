@@ -11,26 +11,27 @@ This README would normally document whatever steps are necessary to get your app
 ### Schema
 
 ```
-create table entry (
-  id        bigserial not null,
-  at        timestamp with time zone not null,
-  source_id varchar not null,
-  actor_id  varchar not null,
-  action    varchar not null,
-  object_id varchar,
-  target_id varchar,
-  trace_id  varchar,
-  span_id   varchar,
-  context   varchar
+CREATE TABLE entry (
+  id        bigserial NOT NULL,
+  published timestamp NOT NULL,
+  source    varchar   NOT NULL,
+  type      varchar   NOT NULL,
+  actor     varchar   NOT NULL,
+  object    varchar   NOT NULL,
+  target    varchar   NOT NULL,
+  context   jsonb,
+  trace_id  varchar   NOT NULL,
+  span_id   varchar   NOT NULL
 );
 ```
 
 ### Entry Examples
 
-| source_id           | actor_id  | action | object_id     | object_id     | target_id | context                             |
-| ------------------- | --------  | ------ | ------------- | ------------- | --------- | ----------------------------------- |
-| ip:100.101.102.103  | user:1234 | click  | button:upload | file:logo.png |   null    | {"page":"https://myapp.site/photos" |
-| host:api.myapp.site | user:1234 | create | image:123     |   null        |   null    |   null                              |
+| source              | actor     | type   | object        | target_id | context              |
+| ------------------- | --------  | ------ | ------------- | --------- | -------------------- |
+| ip:100.101.102.103  | user:1234 | click  | button:upload | null      | {"page": "/photos"}  |
+| host:api.myapp.site | user:1234 | upload | file:logo.png | null      | null                 |
+| host:imgserver.site | user:1234 | create | image:123     | null      | {"file": "logo.png"} |
 
 ### How do I get set up? ###
 

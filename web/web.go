@@ -5,6 +5,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/karmakaze/quicklog/config"
+	"github.com/karmakaze/quicklog/storage"
 )
 
 type WebServer struct {
@@ -45,8 +48,14 @@ func findCertAndPrivKey() (string, string) {
 
 var addr = flag.String("addr", "localhost:8080", "http service address")
 
-func Serve(addr string) {
+func Serve(addr string, cfg config.Config) error {
+	db, err := storage.OpenDB(cfg)
+	if err != nil {
+		return err
+	}
+
 	http.HandleFunc("/status", status)
+	http.Handle("/entries", NewEntriesHandler(db))
 
 	certFile, privkeyFile := findCertAndPrivKey()
 	if certFile != "" && privkeyFile != "" {
@@ -61,4 +70,5 @@ func Serve(addr string) {
 			log.Fatal(err)
 		}
 	}
+	return nil
 }
