@@ -23,8 +23,8 @@ func NewEntriesHandler(db *sql.DB) *EntriesHandler {
 func (h *EntriesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "OPTIONS":
-		w.Header().Add("Access-Control-Allow-Origin:", "*")
-		w.Header().Add("Access-Control-Allow-Methods:", "GET, POST")
+		w.Header().Add("Access-Control-Allow-Origin", "*")
+		w.Header().Add("Access-Control-Allow-Methods", "GET, POST")
 	case "GET":
 		h.listEntries(w, r)
 	case "POST":
@@ -36,13 +36,15 @@ func (h *EntriesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *EntriesHandler) listEntries(w http.ResponseWriter, r *http.Request) {
 	entries := make([]storage.Entry, 0)
+
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json")
+
 	if tx, err := h.db.BeginTx(r.Context(), nil); err != nil {
-		w.Header().Set("content-type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"message": ` + strconv.Quote(err.Error()) + `}`))
 	} else {
 		storage.ListEntries("", "", &entries, tx, r.Context())
-		w.Header().Set("content-type", "application/json")
 		if data, err := json.Marshal(entries); err != nil {
 			tx.Rollback()
 			w.WriteHeader(http.StatusBadRequest)
@@ -55,7 +57,7 @@ func (h *EntriesHandler) listEntries(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *EntriesHandler) createEntry(w http.ResponseWriter, r *http.Request) {
-	if !strings.HasPrefix(r.Header.Get("content-type"), "application/json") {
+	if !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 		return
 	}
@@ -76,7 +78,8 @@ func (h *EntriesHandler) createEntry(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create the entry
-	w.Header().Set("content-type", "application/json")
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json")
 
 	tx, err := h.db.BeginTx(r.Context(), nil)
 	if err != nil {
