@@ -21,7 +21,6 @@ func NewEntriesHandler(db *sql.DB) *EntriesHandler {
 }
 
 func (h *EntriesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("entriesHandler.ServeHTTP\n")
 	switch r.Method {
 	case "OPTIONS":
 		w.Header().Add("Access-Control-Allow-Origin:", "*")

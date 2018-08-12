@@ -8,16 +8,16 @@ import (
 )
 
 type Entry struct {
-	Id        int64
-	Published time.Time
-	Source    string
-	Type      string
-	Actor     string
-	Object    string
-	Target    string
-	Context   map[string]interface{}
-	TraceId   string
-	SpanId    string
+	Id        int64                  `json:"id"`
+	Published time.Time              `json:"published"`
+	Source    string                 `json:"source"`
+	Type      string                 `json:"type"`
+	Actor     string                 `json:"actor"`
+	Object    string                 `json:"object"`
+	Target    string                 `json:"target"`
+	Context   map[string]interface{} `json:"context"`
+	TraceId   string                 `json:"trace_id"`
+	SpanId    string                 `json:"span_id"`
 }
 
 func CreateEntry(e Entry, tx *sql.Tx, ctx context.Context) error {
@@ -33,23 +33,16 @@ func CreateEntry(e Entry, tx *sql.Tx, ctx context.Context) error {
 func ListEntries(filterName, filterValue string, entries *[]Entry, tx *sql.Tx, ctx context.Context) error {
 	var rows *sql.Rows
 	var err error
+	fields := `id, published, source, type, actor, object, target, trace_id, span_id`
 	if filterName != "" {
-		query := `SELECT id, published FROM entry WHERE ` + filterName + ` = $1 ORDER BY id`
-		fmt.Printf("executing query %s\n", query)
+		query := `SELECT ` + fields + ` FROM entry WHERE ` + filterName + ` = $1 ORDER BY id`
 		rows, err = tx.QueryContext(ctx, query, filterValue)
 	} else {
-		query := `SELECT id, published FROM entry ORDER BY id`
-		fmt.Printf("executing query %s\n", query)
+		query := `SELECT ` + fields + ` FROM entry ORDER BY id`
 		rows, err = tx.QueryContext(ctx, query)
 	}
 	if rows != nil {
 		defer rows.Close()
-	}
-	if err != nil {
-		fmt.Printf("query error: %v\n", err)
-	} else {
-		names, _ := rows.Columns()
-		fmt.Printf("columns: %v\n", names)
 	}
 
 	switch {
@@ -59,16 +52,18 @@ func ListEntries(filterName, filterValue string, entries *[]Entry, tx *sql.Tx, c
 		return err
 	}
 
+	names, _ := rows.Columns()
+
 	for rows.Next() {
-		if err := rows.Err(); err != nil {
+		if err = rows.Err(); err != nil {
 			return err
 		}
-		var entry Entry
-		if err := rows.Scan(&entry.Id, &entry.Published); err != nil {
+		var e Entry
+		if err = rows.Scan(&e.Id, &e.Published, &e.Source, &e.Type, &e.Actor, &e.Object, &e.Target, &e.TraceId, &e.SpanId); err != nil {
 			return fmt.Errorf("failed to scan result set: %s", err)
 		}
 
-		(*entries) = append(*entries, entry)
+		(*entries) = append(*entries, e)
 	}
 	return nil
 }
