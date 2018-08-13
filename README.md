@@ -11,11 +11,12 @@ published  |web-browser api-server image-svc|type (action)       actor     objec
 12:18.567                          img-01    POST /images        user:1234 img:45512          size=9876
 ```
 
-### What is this repository for? ###
+### What can I do with it? ###
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+* Collect events from all sources: client (web/mobile), edge, internal, async tasks, batch jobs
+* See chrnological sequence diagram for a filtered subset of events
+* (coming soon) get recent metrics/statistics
+* build front-ends for interacting with collected data
 
 ### Schema
 
@@ -46,6 +47,8 @@ CREATE TABLE entry (
 | ip:100.101.102.103  | user:1234 | click  | button:upload | null      | {"page": "/photos"}  |
 | host:api.myapp.site | user:1234 | upload | file:logo.png | null      | null                 |
 | host:imgserver.site | user:1234 | create | image:123     | null      | {"file": "logo.png"} |
+
+(note: this doesn't quite match the sequence diagram shown at top of README)
 
 ### Building ###
 
