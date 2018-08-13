@@ -44,7 +44,13 @@ func (h *EntriesHandler) listEntries(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"message": ` + strconv.Quote(err.Error()) + `}`))
 	} else {
-		storage.ListEntries("", "", &entries, tx, r.Context())
+		err = storage.ListEntries("", "", &entries, tx, r.Context())
+		if err != nil {
+			tx.Rollback()
+			fmt.Printf("ListEntries: %v\n", err)
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(`{"message": ` + strconv.Quote(err.Error()) + `}`))
+		}
 		if data, err := json.Marshal(entries); err != nil {
 			tx.Rollback()
 			w.WriteHeader(http.StatusBadRequest)

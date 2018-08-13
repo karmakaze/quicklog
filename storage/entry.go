@@ -11,7 +11,8 @@ import (
 )
 
 type Entry struct {
-	Id        int64      `json:"id"`
+	ProjectId int32      `json:"project_id"`
+	Seq       int64      `json:"seq"`
 	Published time.Time  `json:"published"`
 	Source    string     `json:"source"`
 	Type      string     `json:"type"`
@@ -58,9 +59,10 @@ func (c *ContextMap) Scan(src interface{}) error {
 }
 
 func CreateEntry(e Entry, tx *sql.Tx, ctx context.Context) error {
-	query := `INSERT INTO entry (published, source, type, actor, object, target, context, trace_id, span_id)` +
-		` VALUES (NOW(), $1, $2, $3, $4, $5, $6, $7, $8);`
-	if _, err := tx.ExecContext(ctx, query, e.Source, e.Target, e.Actor, e.Object, e.Target,
+	query := `INSERT INTO entry` +
+		` (project_id, published, source, type, actor, object, target, context, trace_id, span_id)` +
+		` VALUES ($1, NOW(), $2, $3, $4, $5, $6, $7, $8, $9);`
+	if _, err := tx.ExecContext(ctx, query, e.ProjectId, e.Source, e.Type, e.Actor, e.Object, e.Target,
 		e.Context, e.TraceId, e.SpanId); err != nil {
 		return fmt.Errorf("failed to insert %v : %v", e, err)
 	}
@@ -70,12 +72,12 @@ func CreateEntry(e Entry, tx *sql.Tx, ctx context.Context) error {
 func ListEntries(filterName, filterValue string, entries *[]Entry, tx *sql.Tx, ctx context.Context) error {
 	var rows *sql.Rows
 	var err error
-	fields := `id, published, source, type, actor, object, target, context, trace_id, span_id`
+	fields := `project_id, seq, published, source, type, actor, object, target, context, trace_id, span_id`
 	if filterName != "" {
-		query := `SELECT ` + fields + ` FROM entry WHERE ` + filterName + ` = $1 ORDER BY id`
+		query := `SELECT ` + fields + ` FROM entry WHERE ` + filterName + ` = $1 ORDER BY project_id, seq`
 		rows, err = tx.QueryContext(ctx, query, filterValue)
 	} else {
-		query := `SELECT ` + fields + ` FROM entry ORDER BY id`
+		query := `SELECT ` + fields + ` FROM entry ORDER BY project_id, seq`
 		rows, err = tx.QueryContext(ctx, query)
 	}
 	if rows != nil {
@@ -90,11 +92,12 @@ func ListEntries(filterName, filterValue string, entries *[]Entry, tx *sql.Tx, c
 	}
 
 	for rows.Next() {
+		fmt.Printf("rows.Next\n")
 		if err = rows.Err(); err != nil {
 			return err
 		}
 		var e Entry
-		if err = rows.Scan(&e.Id, &e.Published, &e.Source, &e.Type, &e.Actor, &e.Object, &e.Target,
+		if err = rows.Scan(&e.ProjectId, &e.Seq, &e.Published, &e.Source, &e.Type, &e.Actor, &e.Object, &e.Target,
 			&e.Context, &e.TraceId, &e.SpanId); err != nil {
 			return fmt.Errorf("failed to scan result set: %s", err)
 		}
