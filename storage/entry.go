@@ -100,6 +100,7 @@ func ListEntries(filterName, filterValue string, entries *[]Entry, tx *sql.Tx, c
 			&e.Context, &e.TraceId, &e.SpanId); err != nil {
 			return fmt.Errorf("failed to scan result set: %s", err)
 		}
+		e.Published = e.Published.UTC()
 
 		(*entries) = append(*entries, e)
 	}
