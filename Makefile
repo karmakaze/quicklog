@@ -17,7 +17,7 @@ clean:
 
 deploy: build-linux
 	echo ssh quicklog "mv /opt/quicklog/$(BINARY_NAME) /opt/quicklog/$(BINARY_NAME)-old"
-	echo scp $(BINARY_LINUX) quicklog:/opt/quicklog/$(BINARY_NAME)
+	echo scp $(BINARY_LINUX) prod:/opt/quicklog/$(BINARY_NAME)
 	echo ssh quicklog "sudo service quicklog restart"
 
 run: deps

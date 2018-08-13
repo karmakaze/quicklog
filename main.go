@@ -13,7 +13,7 @@ func main() {
 	flag.Parse()
 	log.SetFlags(0)
 
-	cfg := config.Config{DbUrl: "postgres://postgres:postgres@localhost:5432/quicklog?sslmode=disable"}
+	cfg := config.Config{DbUrl: "postgres://quicklog:quicklog@localhost:5432/quicklog?sslmode=disable"}
 
 	err := web.Serve("0.0.0.0", cfg)
 	if err != nil {
