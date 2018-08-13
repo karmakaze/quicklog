@@ -1,6 +1,15 @@
 # README #
 
-This README would normally document whatever steps are necessary to get your application up and running.
+`quicklog` is a recent event store that allows fast browsing of application event traces.
+
+```
+time       |sources...                      |details...
+published  |web-browser api-server image-svc|type (action)       actor     object      target context (extra info)
+-----------|----------- ---------- ---------|------------------- --------- ----------- ------ ------------------------------
+12:18.123   1.2.3.4                          click:upload-button user:1234                    user-agent=... 
+12:18.234               api-22               POST /uploads       user:1234                    filename=cat.jpg filesize=9876
+12:18.567                          img-01    POST /images        user:1234 img:45512          size=9876
+```
 
 ### What is this repository for? ###
 
