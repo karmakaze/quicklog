@@ -47,7 +47,7 @@ CREATE TABLE entry (
 ### Creating the database ###
 
 * psql # as a superuser (default is `postgres`)
-* # sometimes: `sudo su postgres -c psql`
+* \# sometimes: `sudo su postgres -c psql`
 * CREATE DATABASE quicklog;
 * CREATE USER quicklog WITH PASSWORD 'quicklog';
 * GRANT ALL PRIVILEGES ON DATABASE quicklog TO quicklog;
