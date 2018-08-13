@@ -46,7 +46,7 @@ func findCertAndPrivKey() (string, string) {
 	return "", ""
 }
 
-var addr = flag.String("addr", "localhost:8080", "http service address")
+var addr = flag.String("addr", "localhost:8124", "http service address")
 
 func Serve(addr string, cfg config.Config) error {
 	db, err := storage.OpenDB(cfg)
@@ -65,8 +65,8 @@ func Serve(addr string, cfg config.Config) error {
 			log.Fatal("ListenAndServe: ", err)
 		}
 	} else {
-		log.Printf("Listening on %v:8080 (no-SSL)\n", addr)
-		if err := http.ListenAndServe(addr+":8080", nil); err != nil {
+		log.Printf("Listening on %v:8124 (no-SSL)\n", addr)
+		if err := http.ListenAndServe(addr+":8124", nil); err != nil {
 			log.Fatal(err)
 		}
 	}

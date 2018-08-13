@@ -47,7 +47,6 @@ func (h *EntriesHandler) listEntries(w http.ResponseWriter, r *http.Request) {
 		err = storage.ListEntries("", "", &entries, tx, r.Context())
 		if err != nil {
 			tx.Rollback()
-			fmt.Printf("ListEntries: %v\n", err)
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(`{"message": ` + strconv.Quote(err.Error()) + `}`))
 		}

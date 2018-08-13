@@ -92,7 +92,6 @@ func ListEntries(filterName, filterValue string, entries *[]Entry, tx *sql.Tx, c
 	}
 
 	for rows.Next() {
-		fmt.Printf("rows.Next\n")
 		if err = rows.Err(); err != nil {
 			return err
 		}
