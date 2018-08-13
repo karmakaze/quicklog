@@ -16,7 +16,7 @@ clean:
 	rm -f $(BINARY_LINUX)
 
 deploy: build-linux
-	ssh prod "mv /opt/quicklog/$(BINARY_NAME) /opt/quicklog/$(BINARY_NAME)-old"
+	ssh prod "mv /opt/quicklog/$(BINARY_NAME) /opt/quicklog/$(BINARY_NAME)-old || true"
 	scp $(BINARY_LINUX) prod:/opt/quicklog/$(BINARY_NAME)
 	ssh prod "sudo service quicklog restart"
 
