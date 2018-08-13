@@ -32,7 +32,7 @@ CREATE TABLE entry (
 
 ### Entry Examples
 
-| source              | actor     | type   | object        | target_id | context              |
+| source              | actor     | type   | object        | target    | context              |
 | ------------------- | --------  | ------ | ------------- | --------- | -------------------- |
 | ip:100.101.102.103  | user:1234 | click  | button:upload | null      | {"page": "/photos"}  |
 | host:api.myapp.site | user:1234 | upload | file:logo.png | null      | null                 |
