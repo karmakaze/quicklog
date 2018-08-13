@@ -1,0 +1,12 @@
+[Unit]
+Description=QuickLog Service
+After=network.target
+
+[Service]
+User=quicklog
+WorkingDirectory=/opt/quicklog
+ExecStart=/opt/quicklog/quicklog
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -38,14 +38,55 @@ CREATE TABLE entry (
 | host:api.myapp.site | user:1234 | upload | file:logo.png | null      | null                 |
 | host:imgserver.site | user:1234 | create | image:123     | null      | {"file": "logo.png"} |
 
-### How do I get set up? ###
+### Building ###
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+* make deps
+* make build
+* make build-linux # for cross-compilation
+
+### Creating the database ###
+
+* psql # as a superuser (default is `postgres`)
+* CREATE DATABASE quicklog;
+* CREATE USER quicklog WITH PASSWORD 'quicklog';
+* GRANT ALL PRIVILEGES ON DATABASE quicklog TO quicklog;
+* \q
+* psql -h localhost -U quicklog "quicklog"
+* -- copy/paste the contents of `schema.sql` at the above the `psql` prompt.
+* \q
+
+### Running ###
+
+* ./quicklog &
+* listens on tcp port 8124
+
+To rebuild and restart:
+
+* make build && ./restart.sh
+
+### Deployment ###
+
+* # assuming you have `/etc/hosts` and `~/.ssh/config` set up for host `prod`
+* ssh prod
+* sudo vi /etc/systemd/system/quicklog.service
+* # copy/paste quicklog.service into editor above, save and exit editor
+* # you can either use a different user than `quicklog` in the .service file
+* # or create the user `quicklog` on the system
+* sudo mkdir -p /opt/quicklog
+* sudo chown quicklog:quicklog /opt/quicklog
+* sudo systemctl daemon-reload
+* sudo systemctl enable quicklog # configure to autostart
+* exit # logout from host `prod`
+
+On your development workstation:
+
+* make deploy # see the `deploy:` recipe in the [Makefile](Makefile)
+* # this will make a linux binary, install it as prod:/opt/quicklog/quicklog
+* # and start (or restart) the service
+
+### How to run tests ###
+
+* coming soon...
 
 ### Contribution guidelines ###
 
