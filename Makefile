@@ -16,9 +16,9 @@ clean:
 	rm -f $(BINARY_LINUX)
 
 deploy: build-linux
-	echo ssh quicklog "mv /opt/quicklog/$(BINARY_NAME) /opt/quicklog/$(BINARY_NAME)-old"
-	echo scp $(BINARY_LINUX) prod:/opt/quicklog/$(BINARY_NAME)
-	echo ssh quicklog "sudo service quicklog restart"
+	ssh prod "mv /opt/quicklog/$(BINARY_NAME) /opt/quicklog/$(BINARY_NAME)-old"
+	scp $(BINARY_LINUX) prod:/opt/quicklog/$(BINARY_NAME)
+	ssh prod "sudo service quicklog restart"
 
 run: deps
 	go run -race main.go
