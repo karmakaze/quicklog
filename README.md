@@ -85,6 +85,16 @@ On your development workstation:
 * \# this will make a linux binary, install it as prod:/opt/quicklog/quicklog
 * \# and start (or restart) the service
 
+### Smoke Test ###
+
+* `curl -si 'http://localhost:8124/entries'`
+* `curl -si -X POST -H 'content-type: application/json' \\`
+   `-d '{"project_id": 1, "source": "a-source", "type": "an-action", "actor": "an-actor", \\`
+   `"object": "an-object", "target": "a-target", "context": {"string": "value", "number": 1, \\`
+   `"boolean": true, "null": null, "object": {"list": []}, "list": [{}], "Pi": 3.14159}, \\`
+   `"trace_id": "a-trace-id", "span_id": "a-span-id"}' 'http://localhost:8124/entries'`
+* `curl -si 'http://localhost:8124/entries'`
+
 ### How to run tests ###
 
 * coming soon...
