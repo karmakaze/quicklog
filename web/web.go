@@ -1,13 +1,17 @@
 package web
 
 import (
+	"database/sql"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/karmakaze/quicklog/config"
 	"github.com/karmakaze/quicklog/storage"
+	"github.com/kuangchanglang/graceful"
 )
 
 type WebServer struct {
@@ -49,25 +53,56 @@ func findCertAndPrivKey() (string, string) {
 var addr = flag.String("addr", "localhost:8124", "http service address")
 
 func Serve(addr string, cfg config.Config) error {
-	db, err := storage.OpenDB(cfg)
-	if err != nil {
-		return err
+	certFile, privkeyFile := findCertAndPrivKey()
+	useSSL := certFile != "" && privkeyFile != ""
+
+	var db *sql.DB
+	if useSSL || graceful.IsWorker() {
+		var err error
+		db, err = storage.OpenDB(cfg)
+		if err != nil {
+			return err
+		}
 	}
 
+	// these get added to http.DefaultServeMux
 	http.HandleFunc("/status", status)
 	http.Handle("/entries", NewEntriesHandler(db))
 
-	certFile, privkeyFile := findCertAndPrivKey()
+	var err error
+	if useSSL {
+		// we currently don't support SSL *and* graceful restarts (use a load-balancer to get both)
+		err = runServer(addr, 443, certFile, privkeyFile)
+	} else {
+		err = runServer(addr, 8124, "", "")
+	}
+	if err != nil {
+		if db != nil {
+			db.Close()
+		}
+		log.Fatal(err.Error())
+	}
+	return nil
+}
+
+func runServer(addr string, port int, certFile, privkeyFile string) error {
 	if certFile != "" && privkeyFile != "" {
-		log.Printf("Listening on %v:443 (with SSL)\n", addr)
-		err := http.ListenAndServeTLS(addr+":443", certFile, privkeyFile, nil)
+		// we currently don't support SSL *and* graceful restarts (use a load-balancer to get both)
+		log.Printf("Listening on %v:%d (with SSL)\n", addr, port)
+
+		err := http.ListenAndServeTLS(addr+":"+strconv.Itoa(port), certFile, privkeyFile, nil)
 		if err != nil {
-			log.Fatal("ListenAndServe: ", err)
+			return fmt.Errorf("ListenAndServeTLS: %v", err)
 		}
 	} else {
-		log.Printf("Listening on %v:8124 (no-SSL)\n", addr)
-		if err := http.ListenAndServe(addr+":8124", nil); err != nil {
-			log.Fatal(err)
+		server := graceful.NewServer()
+		server.Register(addr+":"+strconv.Itoa(port), http.DefaultServeMux)
+
+		if graceful.IsWorker() {
+			log.Printf("Listening on %v:%d (no-SSL)\n", addr, port)
+		}
+		if err := server.Run(); err != nil {
+			return fmt.Errorf("graceful.Server.Run: %v", err)
 		}
 	}
 	return nil

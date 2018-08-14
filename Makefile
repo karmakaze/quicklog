@@ -25,6 +25,7 @@ run: deps
 
 deps:
 	go get github.com/lib/pq
+	go get github.com/kuangchanglang/graceful
 
 build-linux:
 	CGO_ENABLED= GOOS=linux GOARCH=amd64 go build -o $(BINARY_LINUX) -v
