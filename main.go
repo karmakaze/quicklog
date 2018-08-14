@@ -1,22 +1,17 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	"log"
 
 	"github.com/karmakaze/quicklog/config"
 	"github.com/karmakaze/quicklog/web"
 )
 
 func main() {
-	flag.Parse()
-	log.SetFlags(0)
+	cfg := config.Parse()
 
-	cfg := config.Config{DbUrl: "postgres://quicklog:quicklog@localhost:5432/quicklog?sslmode=disable"}
-
-	err := web.Serve("0.0.0.0", cfg)
+	err := web.Serve(cfg)
 	if err != nil {
-		fmt.Printf("Error serving 0.0.0.0: %v\n", err)
+		fmt.Println(err.Error)
 	}
 }

@@ -2,11 +2,9 @@ package web
 
 import (
 	"database/sql"
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/karmakaze/quicklog/config"
@@ -32,29 +30,8 @@ func status(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
 
-func findCertAndPrivKey() (string, string) {
-	for _, hostname := range []string{"api.statuspage.me", "statuspage.me"} {
-		certDir := "/etc/letsencrypt/live/" + hostname
-		log.Printf("Looking for fullchain.pem and privkey.pem in %s\n", certDir)
-
-		certFile := certDir + "/fullchain.pem"
-		privkeyFile := certDir + "/privkey.pem"
-
-		if _, err := os.Stat(certFile); os.IsExist(err) {
-			if _, err = os.Stat(privkeyFile); os.IsExist(err) {
-				log.Printf("Found fullchain.pem and privkey.pem in %s\n", certDir)
-				return certFile, privkeyFile
-			}
-		}
-	}
-	return "", ""
-}
-
-var addr = flag.String("addr", "localhost:8124", "http service address")
-
-func Serve(addr string, cfg config.Config) error {
-	certFile, privkeyFile := findCertAndPrivKey()
-	useSSL := certFile != "" && privkeyFile != ""
+func Serve(cfg config.Config) error {
+	useSSL := cfg.SslFullChain != "" && cfg.SslPrivKey != ""
 
 	var db *sql.DB
 	if useSSL || graceful.IsWorker() {
@@ -69,13 +46,7 @@ func Serve(addr string, cfg config.Config) error {
 	http.HandleFunc("/status", status)
 	http.Handle("/entries", NewEntriesHandler(db))
 
-	var err error
-	if useSSL {
-		// we currently don't support SSL *and* graceful restarts (use a load-balancer to get both)
-		err = runServer(addr, 443, certFile, privkeyFile)
-	} else {
-		err = runServer(addr, 8124, "", "")
-	}
+	err := runServer(cfg)
 	if err != nil {
 		if db != nil {
 			db.Close()
@@ -85,21 +56,21 @@ func Serve(addr string, cfg config.Config) error {
 	return nil
 }
 
-func runServer(addr string, port int, certFile, privkeyFile string) error {
-	if certFile != "" && privkeyFile != "" {
+func runServer(cfg config.Config) error {
+	if cfg.SslFullChain != "" && cfg.SslPrivKey != "" {
 		// we currently don't support SSL *and* graceful restarts (use a load-balancer to get both)
-		log.Printf("Listening on %v:%d (with SSL)\n", addr, port)
+		log.Printf("Listening on %v:%d (with SSL)\n", cfg.Address, cfg.Port)
 
-		err := http.ListenAndServeTLS(addr+":"+strconv.Itoa(port), certFile, privkeyFile, nil)
+		err := http.ListenAndServeTLS(cfg.Address+":"+strconv.Itoa(cfg.Port), cfg.SslFullChain, cfg.SslPrivKey, nil)
 		if err != nil {
 			return fmt.Errorf("ListenAndServeTLS: %v", err)
 		}
 	} else {
 		server := graceful.NewServer()
-		server.Register(addr+":"+strconv.Itoa(port), http.DefaultServeMux)
+		server.Register(cfg.Address+":"+strconv.Itoa(cfg.Port), http.DefaultServeMux)
 
 		if graceful.IsWorker() {
-			log.Printf("Listening on %v:%d (no-SSL)\n", addr, port)
+			log.Printf("Listening on %v:%d (no-SSL)\n", cfg.Address, cfg.Port)
 		}
 		if err := server.Run(); err != nil {
 			return fmt.Errorf("graceful.Server.Run: %v", err)
