@@ -64,7 +64,7 @@ func CreateEntry(e Entry, tx *sql.Tx, ctx context.Context) error {
 		` VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);`
 	if _, err := tx.ExecContext(ctx, query, e.ProjectId, e.Published, e.Source,
 		e.Type, e.Actor, e.Object, e.Target, e.Context, e.TraceId, e.SpanId); err != nil {
-		return fmt.Errorf("failed to insert %v : %v", e, err)
+		return fmt.Errorf("failed to insert %v: %v", e, err)
 	}
 	return nil
 }

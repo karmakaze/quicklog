@@ -43,8 +43,9 @@ func Serve(cfg config.Config) error {
 	}
 
 	// these get added to http.DefaultServeMux
-	http.HandleFunc("/status", status)
+	http.Handle("/projects", NewProjectsHandler(db))
 	http.Handle("/entries", NewEntriesHandler(db))
+	http.HandleFunc("/status", status)
 
 	err := runServer(cfg)
 	if err != nil {
