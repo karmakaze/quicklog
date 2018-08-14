@@ -86,6 +86,24 @@ func (h *EntriesHandler) createEntry(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
 
+	if entry.ProjectId <= 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"message": "'project_id' is required"}`))
+	}
+	entry.Seq = 0
+	if entry.Published.IsZero() {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"message": "'published' is required"}`))
+	}
+	if entry.Source == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"message": "'source' is required"}`))
+	}
+	if entry.Type == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"message": "'type' is required"}`))
+	}
+
 	tx, err := h.db.BeginTx(r.Context(), nil)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

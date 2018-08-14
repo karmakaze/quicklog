@@ -61,9 +61,9 @@ func (c *ContextMap) Scan(src interface{}) error {
 func CreateEntry(e Entry, tx *sql.Tx, ctx context.Context) error {
 	query := `INSERT INTO entry` +
 		` (project_id, published, source, type, actor, object, target, context, trace_id, span_id)` +
-		` VALUES ($1, NOW(), $2, $3, $4, $5, $6, $7, $8, $9);`
-	if _, err := tx.ExecContext(ctx, query, e.ProjectId, e.Source, e.Type, e.Actor, e.Object, e.Target,
-		e.Context, e.TraceId, e.SpanId); err != nil {
+		` VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);`
+	if _, err := tx.ExecContext(ctx, query, e.ProjectId, e.Published, e.Source,
+		e.Type, e.Actor, e.Object, e.Target, e.Context, e.TraceId, e.SpanId); err != nil {
 		return fmt.Errorf("failed to insert %v : %v", e, err)
 	}
 	return nil
