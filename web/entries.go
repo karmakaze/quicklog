@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/karmakaze/quicklog/storage"
 )
@@ -29,6 +30,8 @@ func (h *EntriesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.listEntries(w, r)
 	case "POST":
 		h.createEntry(w, r)
+	case "DELETE":
+		h.deleteEntries(w, r)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
@@ -120,4 +123,42 @@ func (h *EntriesHandler) createEntry(w http.ResponseWriter, r *http.Request) {
 
 	tx.Commit()
 	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *EntriesHandler) deleteEntries(w http.ResponseWriter, r *http.Request) {
+	tx, err := h.db.BeginTx(r.Context(), nil)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"message": ` + strconv.Quote(err.Error()) + `}`))
+		return
+	}
+
+	r.ParseForm()
+
+	projectId, err := strconv.Atoi(r.FormValue("project_id"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"message": "'project_id' is required"}`))
+		return
+	}
+
+	rfc3339micro := "2006-01-02T15:04:05.999999Z07:00"
+	published, err := time.Parse(rfc3339micro, r.FormValue("published"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"message": "'published' is required"}`))
+		return
+	}
+
+	if err = storage.DeleteEntriesOlderThan(projectId, published, tx, r.Context()); err != nil {
+		tx.Rollback()
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"message": ` + strconv.Quote(err.Error()) + `}`))
+		return
+	}
+	tx.Commit()
+
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusNoContent)
 }

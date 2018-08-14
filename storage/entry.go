@@ -107,10 +107,10 @@ func ListEntries(filterName, filterValue string, entries *[]Entry, tx *sql.Tx, c
 	return nil
 }
 
-func DeleteEntriesOlderThan(published time.Time, tx *sql.Tx, ctx context.Context) error {
-	query := `DELETE FROM entry WHERE published < $1;`
-	if _, err := tx.ExecContext(ctx, query, published); err != nil {
-		return fmt.Errorf("failed to delete entries older than %v: %s", published, err)
+func DeleteEntriesOlderThan(projectId int, published time.Time, tx *sql.Tx, ctx context.Context) error {
+	query := `DELETE FROM entry WHERE project_id = $1 published < $2;`
+	if _, err := tx.ExecContext(ctx, query, projectId, published); err != nil {
+		return fmt.Errorf("failed to delete project_id %d entries older than %v: %s", projectId, published, err)
 	}
 	return nil
 }
