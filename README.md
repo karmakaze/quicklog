@@ -101,7 +101,8 @@ On your development workstation:
 
 * `curl -s 'http://localhost:8124/entries' |./jl`
 * `curl -si -X POST -H 'content-type: application/json' `
-   `-d '{"project_id": 1, "source": "a-source", "type": "an-action", "actor": "an-actor", `
+   `-d '{"project_id": 1, "published": "2018-08-13T02:13:12.713221Z", "source": "a-source", `
+   `"type": "an-action", "actor": "an-actor", `
    `"object": "an-object", "target": "a-target", "context": {"string": "value", "number": 1, `
    `"boolean": true, "null": null, "object": {"list": []}, "list": [{}], "Pi": 3.14159}, `
    `"trace_id": "a-trace-id", "span_id": "a-span-id"}' 'http://localhost:8124/entries'`
