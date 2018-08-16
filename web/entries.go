@@ -137,14 +137,14 @@ func (h *EntriesHandler) deleteEntries(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rfc3339micro := "2006-01-02T15:04:05.999999Z07:00"
-	published, err := time.Parse(rfc3339micro, r.FormValue("published"))
+	publishedBefore, err := time.Parse(rfc3339micro, r.FormValue("published_before"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"message": "'published' is required"}`))
+		w.Write([]byte(`{"message": "'published_before' is required"}`))
 		return
 	}
 
-	log.Printf("Deleting entries: project_id: %d, published before: %v\n", projectId, published)
+	log.Printf("Deleting entries: project_id: %d, published_before: %v\n", projectId, publishedBefore)
 
 	tx, err := h.db.BeginTx(r.Context(), nil)
 	if err != nil {
@@ -153,7 +153,7 @@ func (h *EntriesHandler) deleteEntries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = storage.DeleteEntriesOlderThan(projectId, published, tx, r.Context()); err != nil {
+	if err = storage.DeleteEntriesOlderThan(projectId, publishedBefore, tx, r.Context()); err != nil {
 		tx.Rollback()
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"message": ` + strconv.Quote(err.Error()) + `}`))
