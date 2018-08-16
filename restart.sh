@@ -1,2 +1,1 @@
-#!/bin/bash
-make build && (killall quicklog; ./quicklog &)
+dev-scripts/restart.sh

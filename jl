@@ -1,2 +1,1 @@
-#!/bin/bash
-sed -e 's/^\[/\[\n/' -e 's/},{/},\n{/g' -e 's/\]$/\n\]\n/' -e 's/^\([^A-Z].+\)$/\1\n/'
+dev-scripts/jl
