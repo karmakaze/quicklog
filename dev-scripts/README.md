@@ -7,6 +7,8 @@ To use it:
 - `mkdir /opt/quicklog`
 - `cd /opt/quicklog`
 - `git clone git@github.com:karmakaze/quicklog .`
+- mkdir -p ~/go/src/github.com/karmakaze
+- ln -s /opt/quicklog ~/go/src/github.com/karmakaze/quicklog
 - `make build`
 - install the `quicklog.service` to work with `systemd` changing the `user` value as necessary.
 

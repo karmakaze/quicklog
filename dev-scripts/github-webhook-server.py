@@ -22,7 +22,6 @@ class S(BaseHTTPRequestHandler):
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])
         body = self.rfile.read(content_length).decode('utf-8')
-        print(body)
         data = json.loads(body)
         repository = data.get('repository')
         if repository != None and repository.get('full_name') == 'karmakaze/quicklog':
