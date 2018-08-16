@@ -4,6 +4,16 @@ BINARY_LINUX=$(BINARY_NAME)_linux
 
 all: test build
 
+rebuild: delete-binary build
+
+rebuild-linux: delete-binary-linux build
+
+delete-binary:
+	rm $(BINARY_NAME)
+
+delete-binary-linux:
+	rm $(BINARY_LINUX)
+
 build: deps
 	go build -o $(BINARY_NAME) -v
 
