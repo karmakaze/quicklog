@@ -24,10 +24,12 @@ class S(BaseHTTPRequestHandler):
         body = self.rfile.read(content_length).decode('utf-8')
         print(body)
         data = json.loads(body)
-        if data['ref'] == 'refs/heads/master':
-            exec_cmd("git pull -r")
-            exec_cmd("make rebuild")
-            exec_cmd("sudo service quicklog restart")
+        repository = data.get('repository')
+        if repository != None and repository.get('full_name') == 'karmakaze/quicklog':
+            if data.get('ref') == 'refs/heads/master':
+                exec_cmd("git pull -r")
+                exec_cmd("make rebuild")
+                exec_cmd("sudo service quicklog restart")
         self._set_headers()
         self.wfile.write('"OK"'.encode('utf-8'))
 
