@@ -4,7 +4,7 @@ BINARY_LINUX=$(BINARY_NAME)_linux
 
 all: test build
 
-build:
+build: deps
 	go build -o $(BINARY_NAME) -v
 
 test:

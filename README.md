@@ -52,9 +52,9 @@ CREATE TABLE entry (
 
 ### Building ###
 
-* make deps
-* make build
-* make build-linux # for cross-compilation
+* [Download and install the Go compiler version 1.9 or later](https://golang.org/dl/)
+* `make build`
+* or `make build-linux # for cross-compilation
 
 ### Creating the database ###
 
