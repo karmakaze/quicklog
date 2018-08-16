@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -126,13 +127,6 @@ func (h *EntriesHandler) createEntry(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *EntriesHandler) deleteEntries(w http.ResponseWriter, r *http.Request) {
-	tx, err := h.db.BeginTx(r.Context(), nil)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"message": ` + strconv.Quote(err.Error()) + `}`))
-		return
-	}
-
 	r.ParseForm()
 
 	projectId, err := strconv.Atoi(r.FormValue("project_id"))
@@ -147,6 +141,15 @@ func (h *EntriesHandler) deleteEntries(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"message": "'published' is required"}`))
+		return
+	}
+
+	log.Printf("Deleting entries: project_id: %d, published before: %v\n", projectId, published)
+
+	tx, err := h.db.BeginTx(r.Context(), nil)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"message": ` + strconv.Quote(err.Error()) + `}`))
 		return
 	}
 
