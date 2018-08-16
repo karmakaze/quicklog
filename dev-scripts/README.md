@@ -13,5 +13,6 @@ To use it:
 Then still from the `/opt/quicklog` directory, run:
 
 - `nohup dev-scripts/github-webhook-server.py &`
+- Add a github webhook to your server (default is HTTP port 9854)
 
 The `dev-scripts/start-webhook-server.sh` script will do just this (also stopping any previously running instance).
