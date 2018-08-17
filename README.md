@@ -97,6 +97,16 @@ On your development workstation:
 * \# this will make a linux binary, install it as prod:/opt/quicklog/quicklog
 * \# and start (or restart) the service
 
+### Development ###
+
+* `go get github.com/codegangsta/gin`
+* `PATH` has to include `$GOPATH/bin` # usually /home/&lt;username&gt;/go/bin
+* `gin -p 8124 -a 3000 run main.go`
+
+The above will rebuild/restart `quicklog` whenever the .go source changes.
+The `gin` watcher listens on port 8124 (normally the quicklog port) as a proxy and forwards requests on port 3000.
+Quicklog will listen on port 3000 as `gin` will set `PORT` accordingly.
+
 ### Smoke Test ###
 
 * `curl -s 'http://localhost:8124/entries' |./jl`
