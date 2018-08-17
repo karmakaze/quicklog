@@ -1,6 +1,13 @@
 CREATE TABLE project (
-  id   serial primary key,
-  name varchar NOT NULL
+  id      serial PRIMARY KEY,
+  name    varchar NOT NULL,
+);
+
+CREATE UNIQUE INDEX project_name_idx ON project (name);
+
+CREATE TABLE api_key (
+  id         varchar PRIMARY KEY,
+  project_id integer NOT NULL
 );
 
 CREATE TABLE entry (
