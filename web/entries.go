@@ -137,11 +137,23 @@ func (h *EntriesHandler) deleteEntries(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rfc3339micro := "2006-01-02T15:04:05.999999Z07:00"
-	publishedBefore, err := time.Parse(rfc3339micro, r.FormValue("published_before"))
+	publishedBefore, err := time.Parse(rfc3339micro, strings.Replace(r.FormValue("published_before"), " ", "T", 1))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"message": "'published_before' is required"}`))
+		w.Write([]byte(`{"message": "'published_before' is required (in RFC 3339 format)"}`))
 		return
+	}
+
+	if apiKey := r.FormValue("api_key"); apiKey == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"message": "'api_key' is required"}`))
+		return
+	} else {
+		if !storage.VerifyApiKey(projectId, apiKey, h.db, r.Context()) {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(`{"message": "'api_key' is not valid"}`))
+			return
+		}
 	}
 
 	log.Printf("Deleting entries: project_id: %d, published_before: %v\n", projectId, publishedBefore)
