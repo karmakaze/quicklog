@@ -1,21 +1,29 @@
 # Go parameters
+OS_MACH=$(shell uname -o; uname -m)
 BINARY_NAME=quicklog
+ifeq ($(OS_MACH),GNU/Linux x86_64)
+BINARY_LINUX=$(BINARY_NAME)
+else
 BINARY_LINUX=$(BINARY_NAME)_linux
+endif
 
 all: test build
 
 rebuild: delete-binary build
 
-rebuild-linux: delete-binary-linux build
+rebuild-linux: delete-binary-linux build-linux
 
 delete-binary:
-	rm $(BINARY_NAME)
+	-rm $(BINARY_NAME) 2>/dev/null
 
 delete-binary-linux:
-	rm $(BINARY_LINUX)
+	-rm $(BINARY_LINUX) 2>/dev/null
 
 build: deps
 	go build -o $(BINARY_NAME) -v
+
+build-linux:
+	CGO_ENABLED= GOOS=linux GOARCH=amd64 go build -o $(BINARY_LINUX) -v
 
 test:
 	go test -v ./...
@@ -36,6 +44,3 @@ run: deps
 deps:
 	go get github.com/lib/pq
 	go get github.com/kuangchanglang/graceful
-
-build-linux:
-	CGO_ENABLED= GOOS=linux GOARCH=amd64 go build -o $(BINARY_LINUX) -v
