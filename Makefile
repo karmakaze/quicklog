@@ -4,8 +4,9 @@ BINARY_NAME=quicklog
 ifeq ($(OS_MACH),GNU/Linux x86_64)
 BINARY_LINUX=$(BINARY_NAME)
 else
-BINARY_LINUX=$(BINARY_NAME)_linux
+BINARY_LINUX=$(BINARY_NAME)-linux
 endif
+BINARY_DARWIN=$(BINARY_NAME)-darwin
 
 all: test build
 
@@ -24,6 +25,9 @@ build: deps
 
 build-linux:
 	CGO_ENABLED= GOOS=linux GOARCH=amd64 go build -o $(BINARY_LINUX) -v
+
+build-darwin:
+	CGO_ENABLED= GOOS=darwin GOARCH=amd64 go build -o $(BINARY_DARWIN) -v
 
 test:
 	go test -v ./...

@@ -69,48 +69,84 @@ func CreateEntry(e Entry, tx *sql.Tx, ctx context.Context) error {
 	return nil
 }
 
-func ListEntries(filterName, filterValue string, entries *[]Entry, tx *sql.Tx, ctx context.Context) error {
+func ListEntries(projectId int, publishedMin, publishedMax time.Time, limit int, tx *sql.Tx, ctx context.Context) ([]Entry, error) {
 	var rows *sql.Rows
+	reverse := false
+
 	var err error
 	fields := `project_id, seq, published, source, type, actor, object, target, context, trace_id, span_id`
-	if filterName != "" {
-		query := `SELECT ` + fields + ` FROM entry WHERE ` + filterName + ` = $1 ORDER BY project_id, seq`
-		rows, err = tx.QueryContext(ctx, query, filterValue)
+
+	if !publishedMin.IsZero() && !publishedMax.IsZero() {
+		query := `SELECT ` + fields + ` FROM entry WHERE project_id = $1` +
+			` AND published BETWEEN $2 AND $3 ORDER BY seq LIMIT $4`
+		rows, err = tx.QueryContext(ctx, query, projectId, publishedMin, publishedMax, limit)
+	} else if !publishedMin.IsZero() {
+		query := `SELECT ` + fields + ` FROM entry WHERE project_id = $1` +
+			` AND published >= $2 ORDER BY seq LIMIT $3`
+		rows, err = tx.QueryContext(ctx, query, projectId, publishedMin, limit)
+	} else if !publishedMax.IsZero() {
+		query := `SELECT ` + fields + ` FROM entry WHERE project_id = $1` +
+			` AND published <= $2 ORDER BY seq DESC LIMIT $3`
+		reverse = true
+		rows, err = tx.QueryContext(ctx, query, projectId, publishedMax, limit)
 	} else {
-		query := `SELECT ` + fields + ` FROM entry ORDER BY project_id, seq`
-		rows, err = tx.QueryContext(ctx, query)
+		query := `SELECT ` + fields + ` FROM entry WHERE project_id = $1 ORDER BY seq LIMIT $2`
+		rows, err = tx.QueryContext(ctx, query, projectId, limit)
 	}
+
 	if rows != nil {
 		defer rows.Close()
 	}
 
 	switch {
 	case err == sql.ErrNoRows:
-		return nil
+		return nil, nil
 	case err != nil:
-		return err
+		return nil, err
 	}
+
+	entries := make([]Entry, 0)
 
 	for rows.Next() {
 		if err = rows.Err(); err != nil {
-			return err
+			return nil, err
 		}
 		var e Entry
 		if err = rows.Scan(&e.ProjectId, &e.Seq, &e.Published, &e.Source, &e.Type, &e.Actor, &e.Object, &e.Target,
 			&e.Context, &e.TraceId, &e.SpanId); err != nil {
-			return fmt.Errorf("failed to scan result set: %s", err)
+			return nil, fmt.Errorf("failed to scan result set: %s", err)
 		}
 		e.Published = e.Published.UTC()
 
-		(*entries) = append(*entries, e)
+		entries = append(entries, e)
 	}
-	return nil
+
+	if reverse {
+		reverseEntries(entries)
+	}
+
+	return entries, nil
 }
 
-func DeleteEntriesOlderThan(projectId int, publishedBefore time.Time, tx *sql.Tx, ctx context.Context) error {
-	query := `DELETE FROM entry WHERE project_id = $1 AND published < $2;`
-	if _, err := tx.ExecContext(ctx, query, projectId, publishedBefore); err != nil {
-		return fmt.Errorf("failed to delete project_id %d entries older than %v: %s", projectId, publishedBefore, err)
+func reverseEntries(entries []Entry) {
+	lst := len(entries) - 1
+	mid := len(entries) / 2
+	for i := 0; i < mid; i++ {
+		entries[i], entries[lst-i] = entries[lst-i], entries[i]
 	}
-	return nil
+}
+
+func DeleteEntries(projectId int, publishedMin, publishedMax time.Time, tx *sql.Tx, ctx context.Context) error {
+	var err error
+	if !publishedMin.IsZero() && !publishedMax.IsZero() {
+		query := `DELETE FROM entry WHERE project_id = $1 AND published BETWEEN $2 AND $3;`
+		_, err = tx.ExecContext(ctx, query, projectId, publishedMin, publishedMax)
+	} else if !publishedMin.IsZero() {
+		query := `DELETE FROM entry WHERE project_id = $1 AND $2 <= published;`
+		_, err = tx.ExecContext(ctx, query, projectId, publishedMin)
+	} else if !publishedMax.IsZero() {
+		query := `DELETE FROM entry WHERE project_id = $1 AND published <= $2;`
+		_, err = tx.ExecContext(ctx, query, projectId, publishedMax)
+	}
+	return err
 }

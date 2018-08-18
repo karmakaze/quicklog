@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/karmakaze/quicklog/storage"
 )
@@ -39,16 +38,39 @@ func (h *EntriesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *EntriesHandler) listEntries(w http.ResponseWriter, r *http.Request) {
-	entries := make([]storage.Entry, 0)
-
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
+
+	r.ParseForm()
+
+	projectId, err := strconv.Atoi(r.FormValue("project_id"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"message": "'project_id' is required (numeric)"}`))
+		return
+	}
+
+	publishedMin, publishedMax, ok := parsePublished(r)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"message": "'published' must be [from,] or [,to] or [from,to] in RFC 3339 format"}`))
+		return
+	}
+
+	count := 100
+	if value := r.FormValue("count"); value != "" {
+		if count, err = strconv.Atoi(value); err != nil || count < 1 || count > 1000 {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(`{"message": "'count' must be between 1 to 1000"}`))
+			return
+		}
+	}
 
 	if tx, err := h.db.BeginTx(r.Context(), nil); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"message": ` + strconv.Quote(err.Error()) + `}`))
 	} else {
-		err = storage.ListEntries("", "", &entries, tx, r.Context())
+		entries, err := storage.ListEntries(projectId, publishedMin, publishedMax, count, tx, r.Context())
 		if err != nil {
 			tx.Rollback()
 			w.WriteHeader(http.StatusBadRequest)
@@ -136,11 +158,10 @@ func (h *EntriesHandler) deleteEntries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rfc3339micro := "2006-01-02T15:04:05.999999Z07:00"
-	publishedBefore, err := time.Parse(rfc3339micro, strings.Replace(r.FormValue("published_before"), " ", "T", 1))
-	if err != nil {
+	publishedMin, publishedMax, ok := parsePublished(r)
+	if !ok || publishedMin.IsZero() && publishedMax.IsZero() {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"message": "'published_before' is required (in RFC 3339 format)"}`))
+		w.Write([]byte(`{"message": "'published' must be [from,] or [,to] or [from,to] in RFC 3339 format"}`))
 		return
 	}
 
@@ -156,7 +177,7 @@ func (h *EntriesHandler) deleteEntries(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	log.Printf("Deleting entries: project_id: %d, published_before: %v\n", projectId, publishedBefore)
+	log.Printf("Deleting entries: project_id: %d, published: %v\n", projectId, r.FormValue("published"))
 
 	tx, err := h.db.BeginTx(r.Context(), nil)
 	if err != nil {
@@ -165,7 +186,7 @@ func (h *EntriesHandler) deleteEntries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = storage.DeleteEntriesOlderThan(projectId, publishedBefore, tx, r.Context()); err != nil {
+	if err = storage.DeleteEntries(projectId, publishedMin, publishedMax, tx, r.Context()); err != nil {
 		tx.Rollback()
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"message": ` + strconv.Quote(err.Error()) + `}`))

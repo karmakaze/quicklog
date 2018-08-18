@@ -12,7 +12,7 @@ type Project struct {
 }
 
 func CreateProject(p Project, tx *sql.Tx, ctx context.Context) error {
-	query := `INSERT INTO project (name) VALUES ($1);`
+	query := `INSERT INTO project (name) VALUES ($1)`
 	if _, err := tx.ExecContext(ctx, query, p.Name); err != nil {
 		return fmt.Errorf("failed to insert %v: %v", p, err)
 	}

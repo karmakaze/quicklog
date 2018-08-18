@@ -12,6 +12,6 @@ func main() {
 
 	err := web.Serve(cfg)
 	if err != nil {
-		fmt.Println(err.Error)
+		fmt.Println(err.Error())
 	}
 }
